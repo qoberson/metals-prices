@@ -11,6 +11,8 @@ import locale
 import re
 import requests
 from bs4 import BeautifulSoup
+import ssl
+from urllib.request import Request, urlopen
 
 config = configparser.ConfigParser()
 config.read('../config.ini')
@@ -97,7 +99,7 @@ def extract_1AG1(soup, checkbox_state = False, start_date=None, end_date=None):
     """
 
     url = 'https://www.cookson-clal-industrie.com/prix-des-metaux/'
-    
+
     if checkbox_state and start_date and end_date:
         
         extracted_values = [] # Liste pour stocker les valeurs extraites
@@ -108,7 +110,8 @@ def extract_1AG1(soup, checkbox_state = False, start_date=None, end_date=None):
                 'coursmonth': current_date.strftime('%m'),
                 'coursyear': current_date.strftime('%Y'),
             }
-            response = requests.post(url, data=params, verify=False)
+            response = requests.post(url, data=params, headers=headers, verify=False)
+            print(response.status_code)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 tables = soup.find_all('div', class_="metal-table")
@@ -175,9 +178,18 @@ def extract_1AG2(soup, checkbox_state = False, start_date=None, end_date=None):
     """
     
     url = "https://prices.lbma.org.uk/json/silver.json?r=211497526"
+
+    # On crée le contexte SSL
+    context = ssl._create_unverified_context()
+
+    # On crée une requête avec un "User-Agent" de navigateur récent
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
+
+    # On ouvre la session avec la requête ET le contexte
+    response = urlopen(req, context=context).read()
     
     
-    response = urlopen(url).read() # Obtenir la réponse de l'URL
+    # response = urlopen(url).read() # Obtenir la réponse de l'URL
     data = json.loads(response) # Charger les données JSON
 
     if checkbox_state and start_date and end_date:
@@ -321,7 +333,17 @@ def extract_1AU2(soup, checkbox_state = False, start_date = None, end_date = Non
     """
 
     url = "https://prices.lbma.org.uk/json/gold_pm.json?r=666323974"
-    response = urlopen(url).read()
+
+    # On crée le contexte SSL (que vous avez déjà ajouté)
+    context = ssl._create_unverified_context()
+
+    # On crée une requête avec un "User-Agent" de navigateur récent
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
+
+    # On ouvre la session avec la requête ET le contexte
+    response = urlopen(req, context=context).read()
+
+    #response = urlopen(url).read()
     data = json.loads(response)
 
     if checkbox_state and start_date and end_date:
@@ -383,6 +405,7 @@ def extract_1AU3(soup, checkbox_state = False, start_date=None, end_date=None):
     """
 
     url = 'https://www.cookson-clal-industrie.com/prix-des-metaux/'
+
 
     if checkbox_state and start_date and end_date:
         extracted_values = []
